@@ -9,7 +9,7 @@ using namespace std;
 char arr[3][3] = {{'n', 'n', 'n'}, {'n', 'n', 'n'}, {'n', 'n', 'n'}};
 
 char winner;
-
+bool isDraw;
 const int WINDOW_WIDTH = 640;
 const int WINDOW_HEIGHT = 480;
 
@@ -26,6 +26,21 @@ void printCurrentPositions()
     std::cout << "____________";
     std::cout << std::endl;
   }
+}
+
+bool checkForDraw()
+{
+  bool found = 0;
+  for (int i = 0; i < 3; ++i)
+  {
+    for (int j = 0; j < 3; ++j)
+    {
+      if (arr[i][j] == 'n') {
+        found = 1;
+      }
+    }
+  }
+  return !found;
 }
 
 bool checkForWin()
@@ -61,6 +76,8 @@ bool checkForWin()
     winner = arr[0][2];
     return true;
   }
+
+  isDraw = checkForDraw();
 
   return false;
 }
@@ -157,6 +174,16 @@ void greetWinner(SDL_Renderer *renderer, char player, TTF_Font *font)
   SDL_DestroyTexture(texture);
 }
 
+void announceDraw(SDL_Renderer *renderer, TTF_Font *font)
+{
+  SDL_Surface *surface = TTF_RenderText_Solid(font, "Draw", {255, 255, 0});
+  SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
+  SDL_Rect text_rect = {275, 10, 300, 50};
+  SDL_FreeSurface(surface);
+  SDL_RenderCopy(renderer, texture, NULL, &text_rect);
+  SDL_DestroyTexture(texture);
+}
+
 void resetBoard()
 {
   for (int i = 0; i < 3; ++i)
@@ -225,10 +252,10 @@ int main()
       }
       if (e.type == SDL_MOUSEBUTTONDOWN)
       {
-        if (checkForWin())
+        if (checkForWin() || isDraw)
         {
           resetBoard();
-          i = 0;
+          i = isDraw = 0;
           continue;
         }
         int mx = e.button.x, my = e.button.y;
@@ -282,6 +309,10 @@ int main()
     if (checkForWin())
     {
       greetWinner(renderer, winner, font);
+    }
+
+    if (isDraw) {
+      announceDraw(renderer, font);
     }
 
     // Always draw board
